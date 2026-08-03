@@ -1,0 +1,41 @@
+# Секреты и локальные настройки
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# Логи и рантайм
+logs/
+*.log
+*.log.*
+
+# Локальные данные аккаунтов и очередей (не коммитить)
+data/accounts.json
+data/queue.json
+
+# Сессии / кэш
+sessions/*
+!sessions/.gitkeep
+emulator_sessions/*
+!emulator_sessions/.gitkeep
+browser_sessions/
+*.zip
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
