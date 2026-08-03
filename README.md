@@ -21,12 +21,12 @@ Telegram-бот для автоматической публикации Instagr
 ## Как это работает
 
 1. **Telegram (aiogram)** — интерфейс: аккаунты, загрузка ссылок, старт/стоп очереди.
-2. **Очередь** хранится в `data/queue.json` (локально, в git не попадает).
+2. **Очередь** хранится в `data/queue.json`.
 3. **Планировщик (APScheduler)** периодически проверяет очередь и публикует следующий Reel.
 4. **Appium + UiAutomator2** управляет приложением Instagram на Android-эмуляторе: Share → Add to story → публикация.
 5. Перед постингом в нужный аккаунт бот переключает Android-профиль (`am switch-user`), перезапускает Instagram и пересоздаёт сессию Appium.
 
-Один эмулятор обрабатывает аккаунты **по очереди**, не параллельно: одновременно активен только один Android user.
+Один эмулятор обрабатывает аккаунты по очереди: одновременно активен только один Android user.
 
 Подробнее про профили: [docs/android_profiles.md](docs/android_profiles.md).
 
@@ -39,32 +39,30 @@ Telegram-бот для автоматической публикации Instagr
 | Компонент | Рекомендация |
 |-----------|--------------|
 | ОС | Windows 10/11 (64-bit) |
-| CPU | 4+ ядра (для комфортной работы эмулятора) |
-| RAM | от 16 GB (минимум 8 GB, но будет тесно) |
+| CPU | 4+ ядра |
+| RAM | от 16 GB (минимум 8 GB) |
 | Диск | SSD, свободно от 20–30 GB под SDK и AVD |
 | Python | 3.11+ |
 | Node.js | LTS (для Appium CLI) |
 | Android Studio | последняя стабильная версия |
 | Appium | 2.x / 3.x + драйвер `uiautomator2` |
 
-### Системные требования для Android Studio / AVD
+### Android Studio / AVD
 
-Официальные ориентиры Google для Android Studio:
+- Windows 10/11 64-bit
+- 8 GB RAM минимум для IDE; для эмулятора с Instagram удобнее 16 GB
+- SSD
+- Аппаратная виртуализация (VT-x / AMD-V) в BIOS
+- В Windows: **Windows Hypervisor Platform** (или другой поддерживаемый hypervisor)
 
-- **Windows 10/11 64-bit**
-- **8 GB RAM** — минимум для IDE; для эмулятора Instagram комфортнее **16 GB**
-- **SSD**
-- Включённая аппаратная виртуализация (VT-x / AMD-V) в BIOS
-- В Windows: компонент **Windows Hypervisor Platform** (или подходящий hypervisor для эмулятора)
-
-Для AVD с Instagram на практике:
+Параметры AVD, которые обычно ставят под этот проект:
 
 - образ **x86_64**, API 33–34
-- **2 CPU cores**, **2 GB RAM** у виртуального устройства
-- Graphics: **Software** / **SwiftShader**, если Hardware глючит на встроенной видеокарте
+- **2 CPU cores**, **2 GB RAM**
+- Graphics: **Software** или **SwiftShader**, если Hardware нестабилен
 - разрешение около **720p**
 
-На ноутбуках со встроенной графикой эмулятор может грузиться долго — это нормально; в `.env` можно увеличить таймауты (см. `.env.example`).
+При долгом старте эмулятора или смене Android-профиля таймауты можно увеличить в `.env` (см. `.env.example`).
 
 ---
 
@@ -85,7 +83,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Если PowerShell ругается на скрипты:
+Если PowerShell блокирует скрипты:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
@@ -98,8 +96,6 @@ npm i -g appium
 appium driver install uiautomator2
 ```
 
-Проверка:
-
 ```powershell
 appium -v
 appium driver list --installed
@@ -110,7 +106,7 @@ appium driver list --installed
 1. Установите [Android Studio](https://developer.android.com/studio).
 2. Через SDK Manager поставьте **Platform-Tools**, **Emulator**, системный образ **x86_64**.
 3. Создайте AVD (например Pixel 7, API 34).
-4. Добавьте в PATH папку `platform-tools` (чтобы работал `adb`).
+4. Добавьте в PATH папку `platform-tools`.
 5. Задайте переменные окружения пользователя:
 
 ```text
@@ -118,7 +114,7 @@ ANDROID_HOME = C:\Users\<user>\AppData\Local\Android\Sdk
 ANDROID_SDK_ROOT = то же значение
 ```
 
-Перезапустите терминалы после изменения PATH / переменных.
+После изменения PATH / переменных перезапустите терминалы.
 
 ### 5. Конфиг проекта
 
@@ -128,34 +124,34 @@ copy data\accounts.example.json data\accounts.json
 copy data\queue.example.json data\queue.json
 ```
 
-Отредактируйте `.env`:
+В `.env` укажите:
 
 - `BOT_TOKEN` — токен от [@BotFather](https://t.me/BotFather)
 - `EMULATOR_NAME` — serial из `adb devices` (часто `emulator-5554`)
-- `ADB_PATH` — полный путь к `adb.exe` на вашей машине
+- `ADB_PATH` — путь к `adb.exe`
 - `APPIUM_SERVER` — обычно `http://127.0.0.1:4723`
 
-**Не коммитьте `.env` и `data/accounts.json` — они в `.gitignore`.**
+Локальные файлы `.env`, `data/accounts.json` и `data/queue.json` задаются на машине и не входят в репозиторий.
 
 ### 6. Instagram на эмуляторе
 
 Установите Instagram на AVD (Play Store или APK).  
-Для второго/третьего аккаунта используйте Android multi-user (см. [docs/android_profiles.md](docs/android_profiles.md)) или кнопку «Добавить аккаунт» в боте.
+Для нескольких аккаунтов используйте Android multi-user ([docs/android_profiles.md](docs/android_profiles.md)) или добавление аккаунта через бота.
 
 ---
 
 ## Запуск
 
-### Вручную (три окна)
+### Вручную
 
-1. Эмулятор (Device Manager → Play).
-2. Appium:
+1. Запустите эмулятор (Device Manager → Play).
+2. Запустите Appium:
 
 ```powershell
 appium -p 4723
 ```
 
-3. Бот:
+3. Запустите бота:
 
 ```powershell
 cd путь\к\Instagram_bot
@@ -165,25 +161,23 @@ python main.py
 
 ### Через bat (Windows)
 
-В корне проекта есть:
+- `start_all.bat` — Appium → эмулятор → бот
+- `stop_all.bat` — остановка процессов
+- `lighten_pc_for_emulator.bat` — закрытие выбранных фоновых программ перед стартом
 
-- `start_all.bat` — Appium → эмулятор → бот  
-- `stop_all.bat` — остановить процессы  
-- `lighten_pc_for_emulator.bat` — опционально закрыть лишние программы перед стартом  
+В `start_all.bat` можно задать `AVD_NAME` или оставить автовыбор первого AVD из `emulator -list-avds`.
 
-Перед первым запуском откройте `start_all.bat` и при необходимости укажите имя AVD (`AVD_NAME`) или оставьте автовыбор первого AVD из `emulator -list-avds`.
-
-Если видите `EADDRINUSE ... 4723` — порт занят: сначала `stop_all.bat` или `taskkill /F /IM node.exe`.
+Если порт `4723` занят (`EADDRINUSE`), выполните `stop_all.bat` или `taskkill /F /IM node.exe`.
 
 ---
 
 ## Использование в Telegram
 
-1. Напишите боту `/start`.
-2. Добавьте или выберите Instagram-аккаунт.
-3. Загрузите ссылки на Reels.
-4. Подтвердите старт очереди.
-5. Смотрите прогресс и отчёты; при необходимости остановите очередь через «Запущенные автопостинги».
+1. `/start`
+2. Добавить или выбрать Instagram-аккаунт
+3. Загрузить ссылки на Reels
+4. Подтвердить старт очереди
+5. Следить за прогрессом; остановить очередь можно через «Запущенные автопостинги»
 
 ---
 
@@ -201,22 +195,20 @@ Instagram_bot/
 │   ├── states.py
 │   └── utils/
 │       ├── appium.py       # сценарии Instagram в Appium
-│       ├── emulator.py     # ADB, multi-user, прогрев Appium Settings
+│       ├── emulator.py     # ADB, multi-user, Appium Settings
 │       └── storage.py      # accounts / queue JSON
-├── data/                   # локальные JSON (шаблоны *.example.json)
+├── data/                   # шаблоны *.example.json
 ├── docs/
-└── logs/                   # локальные логи (в git не попадают)
+└── logs/
 ```
 
 ---
 
-## Безопасность
+## Данные и конфиг
 
-- Токен бота и пути к SDK храните только в `.env`.
-- Пароли Instagram бот **не сохраняет** в `accounts.json` — только id, отображаемое имя, username и `android_user_id`.
-- Не публикуйте скриншоты с `.env`, логами с токенами и живыми сессиями.
-
-Если токен уже светился в чате или на скрине — перевыпустите его у BotFather (`/revoke` / новый токен).
+- `BOT_TOKEN` и пути к SDK хранятся в `.env`
+- В `accounts.json` сохраняются id, имя в боте, username и `android_user_id`
+- Пароли Instagram в файлы проекта не записываются
 
 ---
 
@@ -228,7 +220,7 @@ Instagram_bot/
 | `No drivers have been installed` | `appium driver install uiautomator2` |
 | `EADDRINUSE :4723` | Уже запущен Appium → `stop_all.bat` |
 | `Appium Settings app is not running` | Дождаться загрузки эмулятора / профиля; увеличить таймауты в `.env` |
-| `device offline` после switch-user | Подождать; бот пробует reconnect; Cold Boot AVD |
+| `device offline` после switch-user | Подождать; Cold Boot AVD |
 | `adb` не находится | PATH → `...\Android\Sdk\platform-tools` |
 | PowerShell блокирует `activate` / `npm` | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 
@@ -236,4 +228,4 @@ Instagram_bot/
 
 ## Лицензия
 
-Репозиторий публичный. Используйте на свой страх и риск и соблюдайте правила Instagram и законодательство вашей страны. Автоматизация аккаунтов может привести к ограничениям со стороны сервиса.
+Используйте на свой страх и риск. Соблюдайте правила Instagram и законодательство вашей страны. Автоматизация аккаунтов может привести к ограничениям со стороны сервиса.

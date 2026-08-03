@@ -39,11 +39,11 @@ adb -s emulator-5554 shell am switch-user 10
 adb -s emulator-5554 shell cmd activity switch-user 10
 ```
 
-### Как теперь добавлять аккаунт в боте
+### Добавление аккаунта через бота
 
-- Нажимаешь **«Добавить новый Instagram-аккаунт»**
-- бот создаёт Android-профиль с именем `ig_account_<id>` и переключается на него
-- дальше бот логинится в Instagram через Appium
+- В Telegram: **«Добавить новый Instagram-аккаунт»**
+- бот создаёт Android-профиль `ig_account_<id>` и переключается на него
+- выполняется вход в Instagram через Appium
 - в `data/accounts.json` сохраняется `android_user_id`
 
 ### Как работает автопостинг
